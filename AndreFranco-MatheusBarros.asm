@@ -42,6 +42,8 @@ section .data
     formato_char: db "%c", 10, 0
     formato_quebra_de_linha: db 10, 0
 
+    formato_debug_header: db 10,"[DEBUG] Valores em anomalias_buffer:",10,0
+    formato_debug_item: db "[DEBUG] Valor %d: %f",10,0
 
     ;•••
     ;•
@@ -320,8 +322,14 @@ anomalia_nao_encontrada:
     fim_loop_verificar_anomalias:
 
     mov byte [nAnomalias], dl
+
+    xor rbx, rbx
+    xor rcx, rcx
 teste_6:
+
     jmp Conversao
+
+
 
 ;--------------------------------------------------------------------------------------;
 ; Conversão de unidades (ºC -> ºF)
@@ -403,7 +411,7 @@ print_saida:
     mov rbx, 0                               ; iterador
 
 loop_print_anomalias_start:
-    cmp bl, cl
+    cmp bl, byte [nAnomalias] 
     je loop_print_anomalias_end
 
     mov rax, 1                               ; rax = 1 argumento
