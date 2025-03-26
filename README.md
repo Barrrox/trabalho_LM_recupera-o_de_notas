@@ -26,3 +26,7 @@ Conversões:
         •  20.000000 °C -> 68.000000 °F
         •  31.000000 °C -> 87.800003 °F
 ```
+
+## Decisões de projeto
+
+Utilização de 2 casas decimais para os printfs

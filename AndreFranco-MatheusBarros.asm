@@ -7,17 +7,17 @@
 
 section .data
 
-    format_scanf: db "%f%c"                                  ; Formato das leituras subsequentes do scanf, ver linha 86
-    saida_temperatura: db "Média das Temperaturas: %f °C", 10, 0 
-    saida_umidade: db "Média da Umidade: %f %%", 10, 0
+    format_scanf: db "%f%c" ; Formato das leituras do scanf, ver linha 63
+    saida_temperatura: db "Média das Temperaturas: %.2f °C", 10, 0 
+    saida_umidade: db "Média da Umidade: %.2f %%", 10, 0
 
-    anomalias_1: db "Anomalias: ", 0
-    anomalias_2: db "Temperatura %f fora do intervalo esperado", 0
+    anomalias_1: db "Anomalias: ", 10, 0
+    anomalias_2: db 9,"•  Temperatura %.2f fora do intervalo esperado",10, 0
     anomalia_virgula: db ", "
     anomalia_final: db "", 10, 0
 
-    conversao_1: db "Conversões: ",10,10,0
-    conversao_2: db 9,"•  %f °C -> %f °F", 10, 0
+    conversao_1: db "Conversões: ",10,0
+    conversao_2: db 9,"•  %.2f °C -> %.2f °F", 10, 0
 
     const_nove: dd 9.0
     const_cinco: dd 5.0
@@ -25,31 +25,22 @@ section .data
 
 section .bss
 ; variáveis de entrada 
-    vetor_temperatura resd 64  ; onde os valores de temperatura serão armazenados 
-    vetor_umidade resd 64      ; onde os valores de umidade serão armazenados    
+    vetor_temperatura resd 64        ; onde os valores de temperatura serão armazenados 
+    vetor_umidade resd 64            ; onde os valores de umidade serão armazenados    
     
 ; varíaveis de controle
-    media_temperatura resd 1  ; onde a média das temperaturas será armazenada
-    media_umidade resd 1      ; onde a média das umidades será armazenada
-    desvio_temperatura resd 1      ; onde o desvio padrao das temperaturas será armazenada
+    media_temperatura resd 1         ; onde a média das temperaturas será armazenada
+    media_umidade resd 1             ; onde a média das umidades será armazenada
+    desvio_temperatura resd 1        ; onde o desvio padrao das temperaturas será armazenada
 
-    compararColchete resb 1        ; onde será guardado o 2° caracter lido nos loops de scanf de leitura das entradas, ver linha 116
-    bufferFloat resd 1
+    compararQuebraDeLinha resb 1     ; onde será guardado o 2° caracter lido nos loops de scanf de leitura das entradas, ver linha 73
+    bufferFloat resd 1               ; buffer temporário de leitura dos valores de entrada
 
 ; variáveis para o print de saída
     anomalias_buffer resd 64         ; deve ser do mesmo tamanho que vetor_temperatura  ARRUMAR, nn sabemos quantos dados serão lidos
     conversao_buffer resd 64         ; onde os valores convertidos serão armazenados
-    nAnomalias resb 1
-    nConversoes resb 1 ; numero de floats lidos
-
-
-
-; o que FUNCIONA
-; tudo ate conversao
-    ; mas
-    ; calculo do desvio padrao esta incorreto
-    ; xmm1 ta sendo wipado durante o trecho das anomalias - linha 287
-
+    nAnomalias resb 1                ; número de anomalias identificadas
+    nConversoes resb 1               ; número de entradas lidas
 
 section .text
     global main
@@ -59,119 +50,89 @@ main:
     ; Inicializa o stack frame
     push rbp
     mov rbp, rsp
-
-    ; mov rdi, formato_1 ; Primeiro argumento para printf: a string de formato
-    ; mov rsi, 1         ; Segundo argumento para printf: o número 1
-    ; xor rax, rax         ; Número de registradores de ponto flutuante usados (nenhum neste caso)
-    ; call printf        ; Chama a função printf
-
+    
     ; primeiro scanf -> vetor_temperaturas
         ; guardar o número de floats lidos em nConversoes
 
-    ; preparação para entrar no loop de leitura
-    
-
-
-    ; xor rax, rax
-    ; lea rdi, [entrada_temperaturas]
-    ; call scanf                        ; leitura de entrada_temperaturas: db "Vetor de temperaturas (°C): " 
     xor rbx, rbx
 
 loop_scanf_temperaturas_start:
 
 
     mov rax, 0
-    lea rdi, [format_scanf]
-    lea rsi, [bufferFloat] ; estou lendo um float, nn um int, talvez funcione
-    lea rdx, [compararColchete]
+    lea rdi, [format_scanf]              ; "%f%c"
+    lea rsi, [bufferFloat]          
+    lea rdx, [compararQuebraDeLinha]
 
-    ;lea rcx, [dumpC] ; ignorar o 3 elemento lido
-; a ideia é o quarto parametro(posição de escrita do terceiro elemento lido) ir pro espaço
     call scanf
     
     movss xmm0, [bufferFloat]
-    movss [vetor_temperatura+rbx*4], xmm0 ; ACHO que eh assim com dword
+    movss [vetor_temperatura+rbx*4], xmm0 ; guardar o float lido no vetor
     inc rbx
 
-    mov eax, [compararColchete]
+    mov eax, [compararQuebraDeLinha]      ; verifica-se se é o fim da entrada de temperaturas
     cmp al, 10 ; quebra de linha 
-    je loop_scanf_temperaturas_end
+    je loop_scanf_temperaturas_end        ; se é vai para o final, linha 79
 
-    jmp loop_scanf_temperaturas_start
+    jmp loop_scanf_temperaturas_start     ; se não volta para o começo, linha 59
 
 loop_scanf_temperaturas_end:
 
     mov byte [nConversoes], bl ; salvar a quantidade de elementos lidos
-
-teste_4:
     
-
     ; segundo scanf  -> vetor_umidade
     xor rbx, rbx
 
 loop_scanf_umidades_start:
-
-
+; mesmo processo da leitura de temperaturas
     mov rax, 0
     lea rdi, [format_scanf]
-    lea rsi, [bufferFloat] ; estou lendo um float, nn um int, talvez funcione
-    lea rdx, [compararColchete]
-    ;lea rcx, [dumpC] ; ignorar o 3 elemento lido " "
-; a ideia é o quarto parametro(posição de escrita do terceiro elemento lido) ir pro espaço
-    call scanf
+    lea rsi, [bufferFloat] 
+    lea rdx, [compararQuebraDeLinha]
 
-teste_12:
+    call scanf
     
     movss xmm0, [bufferFloat]
-    movss [vetor_umidade+rbx*4], xmm0 ; ACHO que eh assim com dword
+    movss [vetor_umidade+rbx*4], xmm0 
     
     inc rbx
 
-    mov eax, [compararColchete]
+    mov eax, [compararQuebraDeLinha]
     cmp al, 10
     je loop_scanf_umidades_end
     
     jmp loop_scanf_umidades_start
 
 loop_scanf_umidades_end:
-; katchau
-; katchuga
 
 
 ; Calculo de media e variancia
 calcular_medias:
     xor rbx, rbx
     xorps xmm1, xmm1 ; Clear no xmm1
-    xorps xmm2, xmm2
+    xorps xmm2, xmm2 ; Clear no xmm2
     xorps xmm3, xmm3 ; sera utilizado para guardar o rbx (iterador)
 
 
 loop_calcular_media:
         addss xmm1, [vetor_temperatura + rbx*4] ; xmm1 += temperatura[i]
-        addss xmm2, [vetor_umidade + rbx*4] ; xmm2 += umidade[i]
-        inc rbx ;i++
+        addss xmm2, [vetor_umidade + rbx*4]     ; xmm2 += umidade[i]
+        inc rbx                                 ;i++
         cmp byte [nConversoes], bl
         jz fim_loop_calcular_media
         jmp loop_calcular_media
 
 fim_loop_calcular_media:
     cvtsi2ss xmm3, rbx 
-    divss xmm1, xmm3
-    divss xmm2, xmm3
-teste_10:
+    divss xmm1, xmm3                            ; somatório/n
+    divss xmm2, xmm3                            ; somatório/n
         
     movss [media_temperatura], xmm1
     movss [media_umidade], xmm2
-teste_11:
 
     jmp calcular_desvio_padrao
 
-
-
-    
-; Verificação de anomalia: Se uma leitura estiver acima ou abaixo do desvio padrão
 calcular_desvio_padrao:
-    ;
 
     xor rbx, rbx
     xorps xmm1, xmm1 
@@ -184,17 +145,15 @@ calcular_desvio_padrao:
     ;
     ; utiliza xmm2 para guardar cada (x[i] - media_x[i])
     ; e guarda os somatorios em xmm1 e xmm2
+    
     loop_calcular_variancia:
         ; variancia da temperatura
-        ; 10
+
         movss xmm2, [vetor_temperatura + rbx*4] ; += temperatura[i]
         subss xmm2, [media_temperatura] 
-    teste_desviopadrao_1: ; xmm2 deve ter : -10.33, -0,333, 10,66
-        mulss xmm2, xmm2 ; xmm2²
-    teste_desviopadrao_2: ; xmm2 : 106.77, 0.11111, 113,77
-        addss xmm1, xmm2
-    teste_desviopadrao_3: ; xmm1 deve ter 106.77 + 0.11111 + 113,77
-        inc rbx ; i++
+        mulss xmm2, xmm2                        ; xmm2²
+        addss xmm1, xmm2                        ; somatório
+        inc rbx                                 ; i++ 
         cmp byte [nConversoes], bl
         jz fim_loop_calcular_variancia
         jmp loop_calcular_variancia
@@ -205,60 +164,36 @@ calcular_desvio_padrao:
     mov al, byte [nConversoes]
     cvtsi2ss xmm3, rax
 
-    divss xmm1, xmm3
+    divss xmm1, xmm3                            ; somatório / n
 
     sqrtss xmm1, xmm1 ; desvio padrao = sqrt(variancia)
     movss [desvio_temperatura], xmm1
 
     jmp verificar_anomalias
 
-teste_5:
 verificar_anomalias:
-    xor rax, rax
     xor rbx, rbx ; iterador
     xor rcx, rcx ; guardara iterador do vetor de anomalias
     xor rdx, rdx ; guardará contador de anomalias
 
     xorps xmm1, xmm1
-    xorps xmm2, xmm2
-    xorps xmm3, xmm3 ; guardara media_temperatura + desvio padrao
-    xorps xmm4, xmm4 ; guardara media_umidade + desvio padrao
-
-    
+    xorps xmm3, xmm3 ; guardara media_temperatura + desvio padrao ou media_temperatura - desvio padrao
 
 loop_verificar_anomalias:
 
-        movss xmm1, [vetor_temperatura + rbx*4]
+        movss xmm1, [vetor_temperatura + rbx*4] ; xmm1 = temperatura[i]
 
-        ; cmpss precisa de um terceiro parametro que indica o tipo de comparação
-        ; no caso, 6 = "greater than"
-
-        movss xmm3, [media_temperatura]
+        movss xmm3, [media_temperatura] ; xmm3 = media
         addss xmm3, [desvio_temperatura] ; xmm3 = media + desvio padrao
 
-        ; xmm1 - xmm3 -> 10 - 28.9 = less
-        ; xmm1 - xmm3 -> 20 - 28.9 = less
-        ; xmm1 - xmm3 -> 31 - 28.9 = greater
-        ucomiss xmm1, xmm3 ; verifica se a leitura está acima do desvio padrão
-    teste_xmm1_xmm3:
+        ucomiss xmm1, xmm3 ; xmm3 = media + 1 desvio padrao
         ja anomalia_encontrada ; se teemperatura > desvio padrao
 
-        ;xmm3 = media + 1 desvio padrao
-        
         ; Verificando se passa do desvio padrão inferior
         movss xmm3, [media_temperatura]
         subss xmm3, [desvio_temperatura] ; xmm3 = media - desvio padrao
-    teste_xmm3:
-        ; xmmm3 = media - 1 desvio padrao
 
-        ; cmpss precisa de um terceiro parametro que indica o tipo de comparação
-        ; no caso, 1 = "less than"
-
-        ; xmm1 - xmm3 -> 10 < 11.5 - ANOMALIA
-        ; xmm1 - xmm3 -> 20 > 11.5
-        ; xmm1 - xmm3 -> 31 > 11.5 
         ucomiss xmm1, xmm3  ; verifica se a leitura está abaixo do desvio padrão ; xmm1 está sendo zerado
-    teste_xmm1_xmm3_2:    
         jb anomalia_encontrada ; se teemperatura < desvio padrao
         jmp anomalia_nao_encontrada
 
@@ -301,7 +236,8 @@ Conversao:
     cmp rbx, rax 
     je loop_conversao_end
 
-    movss xmm1, [const_nove]
+    ; Pega as constantes 9, 5 e 32 para o calculo da conversao
+    movss xmm1, [const_nove] 
     movss xmm2, [const_cinco]
     movss xmm3, [const_trinta_dois]
 
@@ -309,12 +245,13 @@ loop_conversao_start:
 
     je loop_conversao_end
 
+    ; Conversao ºC -> ºF
     movss xmm0, dword [vetor_temperatura+rbx*4]
     mulss xmm0, xmm1
     divss xmm0, xmm2
     addss xmm0, xmm3
 
-    movss dword [conversao_buffer+rbx*4], xmm0
+    movss dword [conversao_buffer+rbx*4], xmm0 ; Move para o vetor de conversoes
 
     inc rbx
     
@@ -325,18 +262,15 @@ loop_conversao_end:
 
 ;--------------------------------------------------------------------------------------;
 
-
 print_saida:
     mov rax, 1                   ; rax = 1 argumento
     lea rdi, [saida_temperatura] ; argumento de formato para o  print "Média das Temperaturas: %f °C"
-;   mov rdi, saida_temperatura
     movss xmm0, [media_temperatura]   
     cvtss2sd xmm0, xmm0          ; conversão de float (32 bits) para 64 bits
     call printf
 
     mov rax, 1                   ; rax = 1 argumento
     lea rdi, [saida_umidade]     ; argumento de formato para o  print "Média das umidades: %f "
-;   mov rdi, saida_umidade
     movss xmm0, [media_umidade]      
     cvtss2sd xmm0, xmm0          ; conversão de float (32 bits) para 64 bits
     call printf
@@ -356,7 +290,6 @@ print_saida:
 
     xorps xmm0, xmm0
 
-    ;mov cl, byte [nAnomalias]                    ; rcx = número de elementos no vetor anomalias
     movzx r10, byte [nConversoes]
     test r10, r10
     jz loop_print_anomalias_end
@@ -379,8 +312,8 @@ loop_print_anomalias_start:
     cmp rbx, r10
     je loop_print_anomalias_end
 
-    lea rdi, [anomalia_virgula]             ; argumento de formato para o print ",  "  
-    call printf
+    ; lea rdi, [anomalia_virgula]             ; argumento de formato para o print ",  "  
+    ; call printf
 
                                    ; incremento do rbx
     jmp loop_print_anomalias_start
