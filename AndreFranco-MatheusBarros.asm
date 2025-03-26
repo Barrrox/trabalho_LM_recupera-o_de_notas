@@ -253,7 +253,7 @@ calcular_desvio_padrao:
 
 teste_5:
 verificar_anomalias:
-
+    xor rax, rax
     xor rbx, rbx ; iterador
     xor rcx, rcx ; guardara iterador do vetor de anomalias
     xor rdx, rdx ; guardará contador de anomalias
@@ -263,35 +263,54 @@ verificar_anomalias:
     xorps xmm3, xmm3 ; guardara media_temperatura + desvio padrao
     xorps xmm4, xmm4 ; guardara media_umidade + desvio padrao
 
-    movss xmm3, [media_temperatura]
-    addss xmm3, [desvio_temperatura] ; xmm3 = media + desvio padrao
+    
 
-    loop_verificar_anomalias:
+loop_verificar_anomalias:
 
         movss xmm1, [vetor_temperatura + rbx*4]
-teste_xmm1_1:
+
         ; cmpss precisa de um terceiro parametro que indica o tipo de comparação
         ; no caso, 6 = "greater than"
-        comiss xmm1, xmm3 ; verifica se a leitura está acima do desvio padrão
+
+        movss xmm3, [media_temperatura]
+        addss xmm3, [desvio_temperatura] ; xmm3 = media + desvio padrao
+
+        ; xmm1 - xmm3 -> 10 - 28.9 = less
+        ; xmm1 - xmm3 -> 20 - 28.9 = less
+        ; xmm1 - xmm3 -> 31 - 28.9 = greater
+        ucomiss xmm1, xmm3 ; verifica se a leitura está acima do desvio padrão
+    teste_xmm1_xmm3:
         ja anomalia_encontrada ; se teemperatura > desvio padrao
+
+        ;xmm3 = media + 1 desvio padrao
         
         ; Verificando se passa do desvio padrão inferior
         movss xmm3, [media_temperatura]
         subss xmm3, [desvio_temperatura] ; xmm3 = media - desvio padrao
+    teste_xmm3:
+        ; xmmm3 = media - 1 desvio padrao
 
         ; cmpss precisa de um terceiro parametro que indica o tipo de comparação
         ; no caso, 1 = "less than"
-        comiss xmm1, xmm3  ; verifica se a leitura está abaixo do desvio padrão ; xmm1 está sendo zerado
-teste_xmm1_3:
+
+        ; xmm1 - xmm3 -> 10 < 11.5 - ANOMALIA
+        ; xmm1 - xmm3 -> 20 > 11.5
+        ; xmm1 - xmm3 -> 31 > 11.5 
+        ucomiss xmm1, xmm3  ; verifica se a leitura está abaixo do desvio padrão ; xmm1 está sendo zerado
+    teste_xmm1_xmm3_2:    
         jb anomalia_encontrada ; se teemperatura < desvio padrao
         jmp anomalia_nao_encontrada
 
 
-        anomalia_encontrada:
+anomalia_encontrada:
             movss [anomalias_buffer + rdx*4], xmm1 ; move o valor da anomalia para o vetor de anomalias
             add rdx, 1
-teste_xmm1_2:
-        anomalia_nao_encontrada:
+        
+        ; É necessário passar por anomalia_nao_encontrada para incrementar rbx e ver se o loop acabou
+        ; entao nao se deve colocar jump para o começo do loop entre anomalia encontrada e nao encontrada
+
+
+anomalia_nao_encontrada:
 
             inc rbx ; i++
             cmp byte [nConversoes], bl
@@ -383,13 +402,13 @@ print_saida:
 
     mov rbx, 0                               ; iterador
 
-loop_print__anomalias_start:
+loop_print_anomalias_start:
     cmp bl, cl
     je loop_print_anomalias_end
 
     mov rax, 1                               ; rax = 1 argumento
     lea rdi, [anomalias_2]                   ; argumento de formato para o print "Temperatura %f fora do intervalo esperado"
-    movss xmm0, dword [anomalias_buffer + 4 * rbx]
+    movss xmm0, dword [anomalias_buffer + 4*rbx]
     cvtss2sd xmm0, xmm0                      ; conversão de float (32 bits) para 64 bits  
     call printf
 
@@ -403,7 +422,7 @@ loop_print__anomalias_start:
     call printf
 
                                    ; incremento do rbx
-    jmp loop_print__anomalias_start
+    jmp loop_print_anomalias_start
     
 loop_print_anomalias_end:
 
