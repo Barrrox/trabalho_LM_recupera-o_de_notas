@@ -20,10 +20,10 @@
 section .data
     ; O vetor variavel
     entrada_temperaturas: db "Vetor de temperaturas (°C): ["    
-    entrada_umidadades: db "Vetor de umidade relativa (%%): [" 
+    entrada_umidades: db "Vetor de umidade relativa (%%): [" 
 
     format_scanf: db "%f%c"                                  ; Formato das leituras subsequentes do scanf, ver linha 86
-    saida_temperatura: db "Média das Temperaturas: %f °C", 10, 0
+    saida_temperatura: db "Média das Temperaturas: %f °C", 10, 0 
     saida_umidade: db "Média da Umidade: %f %%", 10, 0
 
     anomalias_1: db "Anomalias: ", 0
@@ -148,7 +148,7 @@ teste_4:
     ; segundo scanf  -> vetor_umidade
 
     ; xor rax, rax
-    ; lea rdi, [entrada_umidadades]
+    ; lea rdi, [entrada_umidades]
     ; call scanf                        ; leitura de "Vetor de umidade relativa (%%): [ " 
     
     ; mov rbx, 0                        ; contador 
@@ -219,17 +219,20 @@ calcular_desvio_padrao:
 
 
     ; calcular variancia
-    ; formula: somatorio(x[i] - media_x[i])² / (n - 1)
+    ; formula: somatorio(x[i] - media)² / (n - 1)
     ;
     ; utiliza xmm2 para guardar cada (x[i] - media_x[i])
     ; e guarda os somatorios em xmm1 e xmm2
     loop_calcular_variancia:
         ; variancia da temperatura
+        ; 10
         movss xmm2, [vetor_temperatura + rbx*4] ; += temperatura[i]
-        subss xmm2, [media_temperatura]
+        subss xmm2, [media_temperatura] 
+    teste_desviopadrao_1: ; xmm2 deve ter : -10.33, -0,333, 10,66
         mulss xmm2, xmm2 ; xmm2²
+    teste_desviopadrao_2: ; xmm2 : 106.77, 0.11111, 113,77
         addss xmm1, xmm2
-
+    teste_desviopadrao_3: ; xmm1 deve ter 106.77 + 0.11111 + 113,77
         inc rbx ; i++
         cmp byte [nConversoes], bl
         jz fim_loop_calcular_variancia
@@ -240,12 +243,6 @@ calcular_desvio_padrao:
     xor rax, rax
     mov al, byte [nConversoes]
     cvtsi2ss xmm3, rax
-
-    ; Salvando o inteiro 1 e convertendo para float para fazer o calculo n -1
-    xorps xmm4, xmm4
-    mov rax, 1
-    cvtsi2ss xmm4, rax
-    subss xmm3, xmm4 ; n - 1
 
     divss xmm1, xmm3
 
@@ -331,7 +328,7 @@ loop_conversao_start:
 
     je loop_conversao_end
 
-    movss xmm0, dword [vetor_umidade+rbx*4]
+    movss xmm0, dword [vetor_temperatura+rbx*4]
     mulss xmm0, xmm1
     divss xmm0, xmm2
     addss xmm0, xmm3
