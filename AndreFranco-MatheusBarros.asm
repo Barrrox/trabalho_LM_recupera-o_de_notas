@@ -430,15 +430,17 @@ loop_print_anomalias_end:
     lea rdi, [conversao_1]                     ; argumento de formato para o  print "Conversões: ",10,10,0
     call printf
     
-    mov cl, byte [nConversoes]                       ; número de conversões realizadas
-    mov bl, 0                                 ; iterador
+    movzx rcx, byte [nConversoes]                       ; número de conversões realizadas
+    mov rbx, 0                                 ; iterador
 
 
     ; conversao_1: db "Conversões: ",10,10,0
     ; conversao_2: db 9,"•  %f °C -> %f °F", 10, 0
     
 loop_print_conversoes_start:
-    cmp bl, cl 
+    cmp rbx, rcx
+    je loop_print_conversoes_end
+loop_print_conversoes_1:
 
     mov rax, 2                                ; rax = 2 argumento
     lea rdi, [conversao_2]                     ; argumento de formato para o print 9,"•  %f °C -> %f °F", 10, 0
@@ -446,6 +448,7 @@ loop_print_conversoes_start:
     movss xmm1, dword [conversao_buffer + 4 * rbx]
     cvtss2sd xmm0, xmm0                        ; conversão de float (32 bits) para 64 bit
     cvtss2sd xmm1, xmm1
+TESTE_rbx:
     call printf
 
     inc rbx                                    ; incremento do rbx
