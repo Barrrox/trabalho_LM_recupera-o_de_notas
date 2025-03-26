@@ -15,18 +15,18 @@ Exemplo de entrada:
 
 Saída esperada:
 ```
-Média das Temperaturas: 20.333334 °C
-Média da Umidade: 60.000000 %
-Anomalias: Temperatura 10.000000 fora do intervalo esperado,
-Temperatura 31.000000 fora do intervalo esperado,
+Média das Temperaturas: 20.33 °C
+Média da Umidade: 60.00 %
+Anomalias:
+        •  Temperatura 10.00 fora do intervalo esperado
+        •  Temperatura 31.00 fora do intervalo esperado
 
 Conversões:
-
-        •  10.000000 °C -> 50.000000 °F
-        •  20.000000 °C -> 68.000000 °F
-        •  31.000000 °C -> 87.800003 °F
+        •  10.00 °C -> 50.00 °F
+        •  20.00 °C -> 68.00 °F
+        •  31.00 °C -> 87.80 °F
 ```
 
-## Decisões de projeto
+## Decisões de projeto (perfumaria)
 
-Utilização de 2 casas decimais para os printfs
+Utilização de 2 casas decimais para os printf's
