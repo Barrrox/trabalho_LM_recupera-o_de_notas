@@ -5,22 +5,7 @@
 ; Linkagem e Montagem:
 ; nasm -f elf64 Trabalho_2.asm -o Trabalho_2.o; gcc -m64 -no-pie -o Trabalho_2 Trabalho_2.o -lm
 
-; To-Do:
-; scanfs
-; conversao 
-; verificar se o numero de leituras é maior do que 1
-; 
-; To-Conferir:
-; prints
-; parte em que printa vetor
-; 
-;  Vetor de temperaturas (°C): [22.5, 25.3, 40.1, 18.7, 15.2]
-
-
 section .data
-    ; O vetor variavel
-    entrada_temperaturas: db "Vetor de temperaturas (°C): ["    
-    entrada_umidades: db "Vetor de umidade relativa (%%): [" 
 
     format_scanf: db "%f%c"                                  ; Formato das leituras subsequentes do scanf, ver linha 86
     saida_temperatura: db "Média das Temperaturas: %f °C", 10, 0 
@@ -38,24 +23,11 @@ section .data
     const_cinco: dd 5.0
     const_trinta_dois: dd 32.0
 
-    formato_1: db "%d",10,0
-    formato_char: db "%c", 10, 0
-    formato_quebra_de_linha: db 10, 0
-
-    formato_debug_header: db 10,"[DEBUG] Valores em anomalias_buffer:",10,0
-    formato_debug_item: db "[DEBUG] Valor %d: %f",10,0
-
-    ;•••
-    ;•
-
-; 
-
 section .bss
 ; variáveis de entrada 
-    vetor_temperatura resd 64  ; onde os valores de temperatura serão armazenados ARRUMAR, nn sabemos quantos dados serão lidos ; talvez ir guardando os valores lidos na stack
-    vetor_umidade resd 64      ; onde os valores de umidade serão armazenados     ARRUMAR, nn sabemos quantos dados serão lidos
-    dumpC resb 1
-    dumpF resd 1
+    vetor_temperatura resd 64  ; onde os valores de temperatura serão armazenados 
+    vetor_umidade resd 64      ; onde os valores de umidade serão armazenados    
+    
 ; varíaveis de controle
     media_temperatura resd 1  ; onde a média das temperaturas será armazenada
     media_umidade resd 1      ; onde a média das umidades será armazenada
@@ -68,7 +40,6 @@ section .bss
     anomalias_buffer resd 64         ; deve ser do mesmo tamanho que vetor_temperatura  ARRUMAR, nn sabemos quantos dados serão lidos
     conversao_buffer resd 64         ; onde os valores convertidos serão armazenados
     nAnomalias resb 1
-
     nConversoes resb 1 ; numero de floats lidos
 
 
@@ -107,8 +78,7 @@ main:
     xor rbx, rbx
 
 loop_scanf_temperaturas_start:
-;format_scanf %f%c%c numero virgula espaço -> numero fechaColchete void
-;compararColchete
+
 
     mov rax, 0
     lea rdi, [format_scanf]
@@ -121,11 +91,9 @@ loop_scanf_temperaturas_start:
     
     movss xmm0, [bufferFloat]
     movss [vetor_temperatura+rbx*4], xmm0 ; ACHO que eh assim com dword
-teste_1:
     inc rbx
 
     mov eax, [compararColchete]
-
     cmp al, 10 ; quebra de linha 
     je loop_scanf_temperaturas_end
 
@@ -135,46 +103,35 @@ loop_scanf_temperaturas_end:
 
     mov byte [nConversoes], bl ; salvar a quantidade de elementos lidos
 
-    mov rdi, formato_1 ; Primeiro argumento para printf: a string de formato
-    mov rsi, [nConversoes]         ; Segundo argumento para printf: o número 1
-    xor rax, rax         ; Número de registradores de ponto flutuante usados (nenhum neste caso)
-    call printf        ; Chama a função printf
-
-    ; xor rax, rax
-    ; lea rdi, [formato_char]       ; talvez nn fucncione, testar com lea rdi, variavel com '0'
-    ; lea rsi, [dumpC]           ; tentativa de remover o \n do final da entrada
-    ; call scanf
 teste_4:
     
 
     ; segundo scanf  -> vetor_umidade
-
-    ; xor rax, rax
-    ; lea rdi, [entrada_umidades]
-    ; call scanf                        ; leitura de "Vetor de umidade relativa (%%): [ " 
-    
-    ; mov rbx, 0                        ; contador 
-
+    xor rbx, rbx
 
 loop_scanf_umidades_start:
 
-;     mov rax, 1
-;     lea rdi, [format_scanf]
-;     lea rsi, [bufferFloat] ; estou lendo um float, nn um int, talvez funcione
-;     lea rdx, [compararColchete]
-;     ;lea rcx, [dumpC] ; ignorar o 3 elemento lido " "
-; ; a ideia é o quarto parametro(posição de escrita do terceiro elemento lido) ir pro espaço
-    
-;     movss xmm0, [bufferFloat]
-;     movss dword [vetor_umidade+rbx*4], xmm0 ; ACHO que eh assim com dword
-    
-;     inc rbx
 
-;     mov al, compararColchete
-;     cmp eax, 10
-;     je loop_scanf_temperaturas_end
+    mov rax, 0
+    lea rdi, [format_scanf]
+    lea rsi, [bufferFloat] ; estou lendo um float, nn um int, talvez funcione
+    lea rdx, [compararColchete]
+    ;lea rcx, [dumpC] ; ignorar o 3 elemento lido " "
+; a ideia é o quarto parametro(posição de escrita do terceiro elemento lido) ir pro espaço
+    call scanf
+
+teste_12:
     
-;     jmp loop_scanf_umidades_start
+    movss xmm0, [bufferFloat]
+    movss [vetor_umidade+rbx*4], xmm0 ; ACHO que eh assim com dword
+    
+    inc rbx
+
+    mov eax, [compararColchete]
+    cmp al, 10
+    je loop_scanf_umidades_end
+    
+    jmp loop_scanf_umidades_start
 
 loop_scanf_umidades_end:
 ; katchau
@@ -183,7 +140,7 @@ loop_scanf_umidades_end:
 
 ; Calculo de media e variancia
 calcular_medias:
-    mov rbx, 0
+    xor rbx, rbx
     xorps xmm1, xmm1 ; Clear no xmm1
     xorps xmm2, xmm2
     xorps xmm3, xmm3 ; sera utilizado para guardar o rbx (iterador)
@@ -201,9 +158,11 @@ fim_loop_calcular_media:
     cvtsi2ss xmm3, rbx 
     divss xmm1, xmm3
     divss xmm2, xmm3
+teste_10:
         
     movss [media_temperatura], xmm1
     movss [media_umidade], xmm2
+teste_11:
 
     jmp calcular_desvio_padrao
 
@@ -325,11 +284,8 @@ anomalia_nao_encontrada:
 
     xor rbx, rbx
     xor rcx, rcx
-teste_6:
 
     jmp Conversao
-
-
 
 ;--------------------------------------------------------------------------------------;
 ; Conversão de unidades (ºC -> ºF)
@@ -341,9 +297,7 @@ Conversao:
     xorps xmm3, xmm3
     movzx rax, byte [nConversoes]
 
-    ; test rax, rax
-    ; jz loop_conversao_end
-
+    ; Comparadacao para o jump
     cmp rbx, rax 
     je loop_conversao_end
 
@@ -369,7 +323,6 @@ loop_conversao_start:
 
 loop_conversao_end:
 
-teste_7:
 ;--------------------------------------------------------------------------------------;
 
 
@@ -440,12 +393,8 @@ loop_print_anomalias_end:
 
 ;--------------------------------------------------------------------------------------;
 
-
-
 ; loop printando as conversões
 
-
-    
     xor rbx, rbx
     xorps xmm0, xmm0
     
@@ -454,10 +403,6 @@ loop_print_anomalias_end:
     call printf
                          ; número de conversões realizadas
     mov rbx, 0                                 ; iterador
-
-
-    ; conversao_1: db "Conversões: ",10,10,0
-    ; conversao_2: db 9,"•  %f °C -> %f °F", 10, 0
     
 loop_print_conversoes_start:
     cmp rbx, [nConversoes]
@@ -470,7 +415,6 @@ loop_print_conversoes_1:
     movss xmm1, dword [conversao_buffer + 4 * rbx]
     cvtss2sd xmm0, xmm0                        ; conversão de float (32 bits) para 64 bit
     cvtss2sd xmm1, xmm1
-TESTE_rbx:
     call printf
 
     inc rbx                                    ; incremento do rbx

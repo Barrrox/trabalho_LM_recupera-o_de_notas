@@ -1,20 +1,28 @@
 # Otimização de Cálculos para Análise de Sensores Meteorológicos
 
-O programa em assembly deve processar as leituras de de sensores metereológicos
+Autores: André Gustavo Franco, Matheus Barros
 
-Formato da entrada:
+O programa em assembly processa as leituras de de sensores metereológicos
+
+A entrada deve ser uma sequencia de temperaturas seguida de um Enter, então uma sequencia de umidades seguida de 2 Enters. As sequências devem ter o mesmo tamanho.
+
+Exemplo de entrada:
 ```
-Vetor de temperaturas (°C): [22.5, 25.3, 40.1, 18.7, 15.2]
-Vetor de umidade relativa (%): [45.0, 50.2, 80.5, 30.1, 25.0]
+10.0 20.0 31.0 // enter
+50 60 70 // enter
+// enter
 ```
 
 Saída esperada:
 ```
-Média das Temperaturas: 24.36 °C
-Média da Umidade: 46.16 %
-Anomalias: Temperatura 40.1 °C fora do intervalo esperado!
+Média das Temperaturas: 20.333334 °C
+Média da Umidade: 60.000000 %
+Anomalias: Temperatura 10.000000 fora do intervalo esperado,
+Temperatura 31.000000 fora do intervalo esperado,
+
 Conversões:
-• 22.5 °C -> 72.5 °F
-• 25.3 °C -> 77.5 °F
-• 40.1 °C -> 104.2 °F
+
+        •  10.000000 °C -> 50.000000 °F
+        •  20.000000 °C -> 68.000000 °F
+        •  31.000000 °C -> 87.800003 °F
 ```
