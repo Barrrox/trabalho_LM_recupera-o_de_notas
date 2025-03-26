@@ -423,14 +423,12 @@ loop_print_anomalias_end:
 
     
     xor rbx, rbx
-    xor rcx, rcx
     xorps xmm0, xmm0
     
     xor rax, rax
     lea rdi, [conversao_1]                     ; argumento de formato para o  print "Conversões: ",10,10,0
     call printf
-    
-    movzx rcx, byte [nConversoes]                       ; número de conversões realizadas
+                         ; número de conversões realizadas
     mov rbx, 0                                 ; iterador
 
 
@@ -438,7 +436,7 @@ loop_print_anomalias_end:
     ; conversao_2: db 9,"•  %f °C -> %f °F", 10, 0
     
 loop_print_conversoes_start:
-    cmp rbx, rcx
+    cmp rbx, [nConversoes]
     je loop_print_conversoes_end
 loop_print_conversoes_1:
 
