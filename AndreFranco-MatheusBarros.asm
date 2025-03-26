@@ -430,15 +430,15 @@ loop_print_anomalias_end:
     lea rdi, [conversao_1]                     ; argumento de formato para o  print "Conversões: ",10,10,0
     call printf
     
-    mov rcx, nConversoes                       ; número de conversões realizadas
-    mov rbx, 0                                 ; iterador
+    mov cl, byte [nConversoes]                       ; número de conversões realizadas
+    mov bl, 0                                 ; iterador
 
 
     ; conversao_1: db "Conversões: ",10,10,0
     ; conversao_2: db 9,"•  %f °C -> %f °F", 10, 0
     
 loop_print_conversoes_start:
-    cmp rbx, rcx 
+    cmp bl, cl 
 
     mov rax, 2                                ; rax = 2 argumento
     lea rdi, [conversao_2]                     ; argumento de formato para o print 9,"•  %f °C -> %f °F", 10, 0
